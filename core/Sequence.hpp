@@ -1,4 +1,5 @@
-#pragma once
+#ifndef DIFF_PATH_SEQUENCE_HPP
+#define DIFF_PATH_SEQUENCE_HPP
 
 #include <assert.h>
 #include <algorithm>
@@ -8,15 +9,9 @@ namespace differ
 {
     class Sequence
     {
-    private:
-        using ConstIter = typename std::string::const_iterator;
-
     public:
-        Sequence(ConstIter from, ConstIter to)
-            : begin_(from), end_(to) { }
-
         explicit Sequence(const String& text)
-            : begin_(text.begin()), end_(text.end()) { }
+            : Sequence(text.begin(), text.end()) { }
 
         bool operator==(const Sequence& other) const
         {
@@ -33,7 +28,12 @@ namespace differ
             return (aFrom == end_ && bFrom == other.end_);
         }
 
-        UInt32 Size() const { return end_ - begin_; }
+        bool operator!=(const Sequence& other) const
+        {
+            return !(*this == other);
+        }
+
+        inline UInt32 Size() const { return end_ - begin_; }
 
         Char operator[](std::uint32_t index) const
         {
@@ -62,8 +62,16 @@ namespace differ
             return Sequence(begin_ + from, begin_ + to);
         }
 
+        const ConstIter& Begin() const { return begin_; }
+        const ConstIter& End() const { return end_; }
+
     private:
+        Sequence(ConstIter from, ConstIter to) 
+            : begin_(from), end_(to) { }
+
         ConstIter begin_;
         ConstIter end_;
     };
 }
+
+#endif // DIFF_PATH_SEQUENCE_HPP

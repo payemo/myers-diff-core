@@ -1,1 +1,6 @@
-#pragma once
+#ifndef DIFF_PATCH_UTILS_HPP
+#define DIFF_PATCH_UTILS_HPP
+
+
+
+#endif

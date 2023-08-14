@@ -31,18 +31,23 @@ namespace differ
             return !(*this == other);
         }
 
-        String ToString() const
+        const String ToString() const
         {
-            std::ostringstream formattedText;
-            formattedText << "Diff(\"" 
+            std::stringstream formattedText;
+            formattedText << "Diff(\""
                 << std::get<String>(Diff::OperationData(op_))
-                << ",\"" 
-                << String(text_.Begin(), text_.End()) 
+                << ",\""
+                << String(text_.Begin(), text_.End())
                 << "\"";
 
             return formattedText.str();
         }
 
+        inline const Operation GetOperation() const { return op_; }
+
+        inline const String Text() const { return String(text_.Begin(), text_.End()); }
+
+    public:
         static std::tuple<Char, String> OperationData(Operation op)
         {
             switch (op)

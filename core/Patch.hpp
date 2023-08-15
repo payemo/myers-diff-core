@@ -6,6 +6,8 @@
 
 namespace differ
 {
+    using DiffList = typename std::list<Diff>;
+
     class Patch
     {
     public:
@@ -13,7 +15,9 @@ namespace differ
 
         inline bool IsNull()
         {
-            return startA_ == startB_ == lengthA_ == lengthB_ == diffs_.size() == 0;
+            return (startA_ == 0 && lengthA_ == 0)
+                && (startB_ == 0 && lengthB_ == 0)
+                && diffs_.size() == 0;
         }
 
         inline void Append(const Diff& diff) { diffs_.push_back(diff); }
@@ -33,7 +37,7 @@ namespace differ
         }
 
     private:
-        std::list<Diff> diffs_{};
+        DiffList diffs_{};
         UInt32 startA_{ 0 }, lengthA_{ 0 };
         UInt32 startB_{ 0 }, lengthB_{ 0 };
 

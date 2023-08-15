@@ -64,7 +64,7 @@ namespace differ
 
     private:
         Operation op_;
-        Sequence text_;
+        const Sequence& text_;
     };
 }
 

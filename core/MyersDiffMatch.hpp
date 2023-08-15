@@ -42,10 +42,45 @@ namespace differ
         }
 
     private:
-        DiffList Compute(const Sequence& seqA, const Sequence& seq2)
+        DiffList Compute(const Sequence& seqA, const Sequence& seqB)
         {
             DiffList diffs{};
 
+
+            if (seqA.Size() == 0 && seqB.Size() > 0)
+            {
+                diffs.push_back(Diff(Operation::INSERT, seqB));
+                return diffs;
+            }
+
+            if (seqB.Size() == 0 && seqA.Size() > 0)
+            {
+                diffs.push_back(Diff(Operation::DELETE, seqA));
+                return diffs;
+            }
+
+            {
+                const Sequence& longer = seqA.Size() > seqB.Size() ? seqA : seqB;
+                const Sequence& shorter = seqA.Size() > seqB.Size() ? seqB : seqA;
+                UInt32 i = longer.IndexAt(shorter);
+
+                if (i != 1)
+                {
+                    // shortest text is a substring of a longer one.
+                    Operation op = (seqA.Size() > seqB.Size()) ? Operation::DELETE : Operation::INSERT;
+                    diffs.push_back(Diff(op, longer.Substring(0, i)));
+                    diffs.push_back(Diff(Operation::EQUAL, shorter));
+                    diffs.push_back(Diff(op, longer.Substring(i + shorter.Size())));
+                    return diffs;
+                }
+            }
+
+            if (seqB.Size() == 1)
+            {
+                diffs.push_back(Diff(Operation::DELETE, seqA));
+                diffs.push_back(Diff(Operation::INSERT, seqB));
+                return diffs;
+            }
 
             return {};
         }

@@ -60,19 +60,21 @@ namespace differ
             return (at < end_) ? at - begin_ : -1;
         }
 
-        const Sequence& Substring(UInt32 from) const
+        Sequence Substring(UInt32 from) const
         {
             assert(from <= Size());
-
             return Sequence(begin_ + from, end_);
         }
 
-        const Sequence& Substring(UInt32 from, UInt32 to) const
+        Sequence Substring(UInt32 from, UInt32 to) const
         {
             assert(from <= to);
             assert(from <= Size());
 
-            if (to > Size()) to = Size();
+            if (to > Size())
+            {
+                to = Size();
+            }
 
             return Sequence(begin_ + from, begin_ + to);
         }

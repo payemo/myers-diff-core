@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <algorithm>
 #include <iterator>
+#include <iostream>
 #include "defs.hpp"
 
 namespace differ
@@ -11,57 +12,36 @@ namespace differ
     class Sequence
     {
     public:
-        explicit Sequence(const String& text)
+        Sequence(const String& text)
             : Sequence(text.begin(), text.end()) { }
 
-        const Sequence& operator=(const Sequence& other)
+        Sequence(const ConstIter& begin, const ConstIter& end)
+            : begin_(begin), end_(end) { }
+
+        Sequence(const Sequence& other)
+            : begin_(other.begin_), end_(other.end_) { }
+
+        Sequence& operator=(const Sequence other)
         {
-            if (*this == other)
+            if (this == &other)
             {
                 return *this;
             }
 
-            this->begin_ = other.begin_;
-            this->end_ = other.end_;
+            begin_ = other.begin_;
+            end_ = other.end_;
 
             return *this;
         }
 
         bool operator==(const Sequence& other) const
         {
-            if (end_ - begin_ != other.end_ - other.begin_)
-            {
-                return false;
-            }
-
-            ConstIter aFrom = this->begin_, bFrom = other.begin_;
-
-            while (*aFrom++ == *bFrom++)
-                ;
-
-            return (aFrom == end_ && bFrom == other.end_);
+            return std::equal(begin_, end_, other.begin_);
         }
 
         bool operator!=(const Sequence& other) const
         {
             return !(*this == other);
-        }
-
-        Sequence& operator++()
-        {
-            if (this->begin_ != this->end_)
-            {
-                this->begin_++;
-            }
-
-            return *this;
-        }
-
-        Sequence operator++(int n)
-        {
-            Sequence tmp = *this;
-            this->begin_ += n;
-            return tmp;
         }
 
         const Char operator*() const { return *this->begin_; }
@@ -80,14 +60,14 @@ namespace differ
             return (at < end_) ? at - begin_ : -1;
         }
 
-        Sequence Substring(UInt32 from) const
+        const Sequence& Substring(UInt32 from) const
         {
             assert(from <= Size());
 
             return Sequence(begin_ + from, end_);
         }
 
-        Sequence Substring(UInt32 from, UInt32 to) const
+        const Sequence& Substring(UInt32 from, UInt32 to) const
         {
             assert(from <= to);
             assert(from <= Size());
@@ -101,9 +81,6 @@ namespace differ
         ConstIter End() const { return end_; }
 
     private:
-        Sequence(const ConstIter& from, const ConstIter& to)
-            : begin_(from), end_(to) { }
-
         ConstIter begin_;
         ConstIter end_;
     };

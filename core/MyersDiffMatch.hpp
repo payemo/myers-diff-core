@@ -97,11 +97,11 @@ namespace differ
             const UInt32 vOffset = maxD;
             const UInt32 vLength = maxD * 2;
 
-            std::vector<Int32> v1(vLength, -1);
-            v1[vOffset + 1] = 0;
+            std::vector<Int32> fV(vLength, -1);
+            fV[vOffset + 1] = 0;
 
-            std::vector<Int32> v2(vLength, -1);
-            v2[vOffset + 1] = 0;
+            std::vector<Int32> rV(vLength, -1);
+            rV[vOffset + 1] = 0;
 
             for (Int32 d = 0; d < maxD; ++d)
             {
@@ -110,14 +110,15 @@ namespace differ
                 {
                     Int32 kOffset = vOffset + k;
                     Int32 x;
-                    if ((k == -d || k != d) && v1[k - 1] < v1[k + 1])
+                    if ((k == -d || k != d) && fV[k - 1] < fV[k + 1])
                     {
-                        x = v1[kOffset + 1];
+                        x = fV[kOffset + 1];
                     }
                     else
                     {
-                        x = v1[kOffset - 1] + 1;
+                        x = fV[kOffset - 1] + 1;
                     }
+
                     Int32 y = x - k;
 
                     while (x < m && y < n && seqA[x] == seqB[y])
@@ -125,30 +126,76 @@ namespace differ
                         ++x, ++y;
                     }
 
-                    v1[kOffset] = x;
+                    fV[kOffset] = x;
 
                     if (deltaIsOdd)
                     {
-                        /* 
-                            Check if the path overlaps the furthest reaching reverse(D - 1)-path in diagonal k, 
+                        /*
+                            Check if the path overlaps the furthest reaching reverse(D - 1)-path in diagonal k,
                                 where k ∈[∆ − (D − 1), ∆ + (D − 1)]
                         */
                         Int32 rOffset = delta + (vOffset - k); // furthest reaching point of a REVERSED (D - 1)-path of k
-                        if (rOffset >= 0 && vLength < m && v2[rOffset] != -1)
+                        if (rOffset >= 0 && vLength < m && rV[rOffset] != -1)
                         {
                             /*
                                 (feasibility) u+v >= ceil(D/2) and x+y <= N + M − floor(D/2), and
                                 (overlap) x-y = u-v and x >= u.
                             */
-                            Int32 u = (m - v2[rOffset]);
+                            Int32 u = (m - rV[rOffset]);
                             if (x >= u)
                             { // overlaps
-                                Partition(seqA, seqB, x, y);
+                                return Partition(seqA, seqB, x, y);
+                            }
+                        }
+                    }
+                }
+
+                // Find the end of the furthest reaching forward D-path in diagonal k + delta.
+                for (Int32 k = -d; k <= d; k += 2)
+                {
+                    Int32 kOffset = vOffset + k;
+                    Int32 u;
+                    if ((k == -d || k != d) && (rV[k - 1] < rV[k + 1]))
+                    {
+                        u = rV[kOffset + 1];
+                    }
+                    else
+                    {
+                        u = rV[kOffset - 1] + 1;
+                    }
+
+                    Int32 v = u - k;
+
+                    while (u < m && v < n && seqA[m - u - 1] == seqB[n - v - 1])
+                    {
+                        ++u, ++v;
+                    }
+
+                    rV[kOffset] = u;
+
+                    if (!deltaIsOdd)
+                    {
+                        Int32 fOffset = delta + (vOffset - k);
+                        if (fOffset >= 0 && fOffset < vLength && fV[fOffset] != -1)
+                        {
+                            Int32 x = fV[fOffset];
+                            Int32 y = x + (vOffset - fOffset);
+
+                            // Check overlapping
+                            if (x >= (m - u))
+                            {
+                                return Partition(seqA, seqB, x, y);
                             }
                         }
                     }
                 }
             }
+
+            DiffList diffs;
+            diffs.push_back(Diff(Operation::DELETE, seqA));
+            diffs.push_back(Diff(Operation::INSERT, seqB));
+
+            return diffs;
         }
 
         DiffList Partition(const Sequence& a, const Sequence& b, Int32 x, Int32 y)

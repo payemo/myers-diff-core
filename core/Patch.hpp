@@ -67,12 +67,12 @@ namespace differ
         {
             std::stringstream body("@@ -" + lineInfoA + " +" + lineInfoB + "@@\n");
 
-            std::for_each(diffs_.begin(), diffs_.end(), [&body](const Diff& diff)
+            /*std::for_each(diffs_.begin(), diffs_.end(), [&body](const Diff& diff)
             {
                 Operation op = diff.GetOperation();
                 body << std::get<char>(Diff::OperationData(op));
-                body << diff.Text() << std::endl;
-            });
+                body << "asd" << std::endl;
+            });*/
 
             return body.str();
         }

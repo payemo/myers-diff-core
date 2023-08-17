@@ -1,38 +1,31 @@
 #ifndef DIFF_PATCH_UTILS_HPP
 #define DIFF_PATCH_UTILS_HPP
 
+#include "defs.hpp"
+#include <algorithm>
+
 namespace differ
 {
     namespace utils
     {
-        UInt32 CommonPrefixLength(const Sequence& a, const Sequence& b)
+        Size CommonPrefixLength(const String& a, const String& b)
         {
-            UInt32 n = static_cast<UInt32>(std::min(a.Size(), b.Size()));
-            for (UInt32 i = 0; i < n; ++i)
-            {
-                if (a[i] != b[i])
-                {
-                    return i;
-                }
-            }
-
-            return n;
+            Size l = std::min(a.size(), b.size());
+            auto mms = std::mismatch(a.begin(), a.begin() + l, b.begin());
+            return std::distance(mms.first, a.begin());
         }
 
-        UInt32 CommonSuffixLength(const Sequence& a, const Sequence& b)
+        Size CommonSuffixLength(const String& a, const String& b)
         {
-            UInt32 al = a.Size(), bl = b.Size();
-            UInt32 n = static_cast<UInt32>(std::min(a.Size(), b.Size()));
-
-            for (UInt32 i = 1; i <= n; ++i)
-            {
-                if (a[al - i] != b[bl - i])
-                {
-                    return i - 1;
-                }
-            }
-
-            return n;
+            Size l = std::min(a.size(), b.size());
+            auto mms = std::mismatch(a.rbegin(), a.rbegin() + l, b.rbegin());
+            return std::distance(mms.first.base(), a.end());
+        }
+        
+        Size SearchIndexAt(const String& a, const String& b)
+        {
+            auto at = std::search(a.begin(), a.end(), b.begin(), b.end());
+            return (at < a.end()) ? at - a.begin() : -1;
         }
     }
 }

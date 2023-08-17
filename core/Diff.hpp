@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
-#include "Sequence.hpp"
+#include "defs.hpp"
 
 namespace differ
 {
@@ -18,7 +18,7 @@ namespace differ
     class Diff
     {
     public:
-        Diff(Operation operation, const Sequence& text)
+        Diff(Operation operation, const String& text)
             : op_(operation), text_(text) { }
 
         bool operator==(const Diff& other) const
@@ -37,7 +37,7 @@ namespace differ
             formattedText << "Diff(\""
                 << std::get<String>(Diff::OperationData(op_))
                 << ",\""
-                << String(text_.Begin(), text_.End())
+                << text_
                 << "\"";
 
             return formattedText.str();
@@ -45,7 +45,7 @@ namespace differ
 
         inline const Operation GetOperation() const { return op_; }
 
-        inline const String Text() const { return String(text_.Begin(), text_.End()); }
+        inline String Text() const { return text_; }
 
     public:
         static std::tuple<Char, String> OperationData(Operation op)
@@ -64,7 +64,7 @@ namespace differ
 
     private:
         Operation op_;
-        const Sequence& text_;
+        const String& text_;
     };
 }
 

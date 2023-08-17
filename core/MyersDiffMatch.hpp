@@ -11,14 +11,14 @@ namespace differ
     class MyersDiffMatch
     {
     public:
-        DiffList ComputeDiff(const Sequence& textA, const Sequence& textB)
+        DiffList ComputeDiff(const String& textA, const String& textB)
         {
             DiffList diffs{};
 
             // Check for equality
             if (textA == textB)
             {
-                if (textA.Size() > 0)
+                if (textA.size() > 0)
                 {
                     diffs.push_back(Diff(Operation::EQUAL, textA));
                 }
@@ -28,13 +28,13 @@ namespace differ
             // Trim common left part
             UInt32 commonLength = utils::CommonPrefixLength(textA, textB);
 
-            Sequence trimmedA = textA.Substring(commonLength);
-            Sequence trimmedB = textB.Substring(commonLength);
+            String trimmedA = textA.substr(commonLength);
+            String trimmedB = textB.substr(commonLength);
 
             // Trim common right part
             commonLength = utils::CommonSuffixLength(textA, textB);
-            trimmedA = trimmedA.Substring(0, trimmedA.Size() - commonLength);
-            trimmedB = trimmedB.Substring(0, trimmedB.Size() - commonLength);
+            trimmedA = trimmedA.substr(0, trimmedA.size() - commonLength);
+            trimmedB = trimmedB.substr(0, trimmedB.size() - commonLength);
 
             diffs = Compute(trimmedA, trimmedB);
 
@@ -42,40 +42,40 @@ namespace differ
         }
 
     private:
-        DiffList Compute(const Sequence& seqA, const Sequence& seqB)
+        DiffList Compute(const String& seqA, const String& seqB)
         {
             DiffList diffs{};
 
 
-            if (seqA.Size() == 0 && seqB.Size() > 0)
+            if (seqA.size() == 0 && seqB.size() > 0)
             {
                 diffs.push_back(Diff(Operation::INSERT, seqB));
                 return diffs;
             }
 
-            if (seqB.Size() == 0 && seqA.Size() > 0)
+            if (seqB.size() == 0 && seqA.size() > 0)
             {
                 diffs.push_back(Diff(Operation::DELETE, seqA));
                 return diffs;
             }
 
             {
-                const Sequence& longer = seqA.Size() > seqB.Size() ? seqA : seqB;
-                const Sequence& shorter = seqA.Size() > seqB.Size() ? seqB : seqA;
-                UInt32 i = longer.IndexAt(shorter);
+                const String& longer = seqA.size() > seqB.size() ? seqA : seqB;
+                const String& shorter = seqA.size() > seqB.size() ? seqB : seqA;
+                Size i = utils::SearchIndexAt(longer, shorter);
 
                 if (i != 1)
                 {
                     // shortest text is a substring of a longer one.
-                    Operation op = (seqA.Size() > seqB.Size()) ? Operation::DELETE : Operation::INSERT;
-                    diffs.push_back(Diff(op, longer.Substring(0, i)));
+                    Operation op = (seqA.size() > seqB.size()) ? Operation::DELETE : Operation::INSERT;
+                    diffs.push_back(Diff(op, longer.substr(0, i)));
                     diffs.push_back(Diff(Operation::EQUAL, shorter));
-                    diffs.push_back(Diff(op, longer.Substring(i + shorter.Size())));
+                    diffs.push_back(Diff(op, longer.substr(i + shorter.size())));
                     return diffs;
                 }
             }
 
-            if (seqB.Size() == 1)
+            if (seqB.size() == 1)
             {
                 diffs.push_back(Diff(Operation::DELETE, seqA));
                 diffs.push_back(Diff(Operation::INSERT, seqB));
@@ -85,10 +85,10 @@ namespace differ
             return diffs;
         }
 
-        DiffList MiddleSnake(const Sequence& seqA, const Sequence& seqB)
+        DiffList MiddleSnake(const String& seqA, const String& seqB)
         {
-            const UInt32 m = seqA.Size();
-            const UInt32 n = seqB.Size();
+            const Size m = seqA.size();
+            const Size n = seqB.size();
             const Int32 delta = m - n;
             // when delta is odd, check for overlap only while extending forward paths
             // when delta is even, check for overlap only while extending reverse paths
@@ -198,15 +198,15 @@ namespace differ
             return diffs;
         }
 
-        DiffList Partition(const Sequence& a, const Sequence& b, Int32 x, Int32 y)
+        DiffList Partition(const String& a, const String& b, Int32 x, Int32 y)
         {
-            Sequence a1 = a.Substring(0, x);
-            Sequence b1 = b.Substring(0, y);
+            String a1 = a.substr(0, x);
+            String b1 = b.substr(0, y);
 
             DiffList diffsA = Compute(a1, b1);
 
-            a1 = a.Substring(x);
-            b1 = b.Substring(y);
+            a1 = a.substr(x);
+            b1 = b.substr(y);
 
             DiffList diffsB = Compute(a1, b1);
 

@@ -1,15 +1,19 @@
-#include <iostream>
-#include "MyersDiffMatch.hpp"
+#include "MyersDiffMatchTest.hpp"
 
 using namespace differ;
+using namespace tests;
 
 int main(int argc, char** argv)
 {
-    String text1 = "My name is Eugene";
-    String text2 = "My Name is Eugene";
+	try
+	{
+		MyersDiffMatchTest mdm;
+		mdm.RunAll();
+	}
+	catch (String caseDescr)
+	{
+		std::cout << "Test failed: " + caseDescr << std::endl;
+	}
 
-    MyersDiffMatch diff;
-    diff.ComputeDiff(text1, text2);
-
-    return 0;
+	return 0;
 }

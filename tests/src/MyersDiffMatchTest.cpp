@@ -8,6 +8,7 @@ namespace differ
 		{
 			utilityTests.CommonPrefixTest();
 			utilityTests.CommonSuffixTest();
+			utilityTests.SearchIndexAtTest();
 		}
 	}
 }

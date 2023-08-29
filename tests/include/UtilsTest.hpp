@@ -12,7 +12,7 @@ namespace differ
 		{
 			void CommonPrefixTest();
 			void CommonSuffixTest();
-			//void SearchIndexAtTest();
+			void SearchIndexAtTest();
 		};
 	}
 }

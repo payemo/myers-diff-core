@@ -17,7 +17,7 @@ namespace differ
 			}
 		}
 
-		void AssertHelper::AssertEqual(const String& testDescr, const Size s1, const Size s2)
+		void AssertHelper::AssertEqual(const String& testDescr, const Int32 s1, const Int32 s2)
 		{
 			if (s1 != s2)
 			{
@@ -41,6 +41,6 @@ namespace differ
 		// TEMPLATE DEFINITIONS
 
 		template void AssertHelper::PrintErrorMessage(const String&, const String&, const String&);
-		template void AssertHelper::PrintErrorMessage(const String&, const Size&, const Size&);
+		template void AssertHelper::PrintErrorMessage(const String&, const Int32&, const Int32&);
 	}
 }

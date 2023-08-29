@@ -13,7 +13,7 @@ namespace differ
 		{
 		public:
 			static void AssertEqual(const String& testCase, const String& s1, const String& s2);
-			static void AssertEqual(const String& testCase, const Size s1, const Size s2);
+			static void AssertEqual(const String& testCase, const Int32 s1, const Int32 s2);
 
 		private:
 			template<typename T>

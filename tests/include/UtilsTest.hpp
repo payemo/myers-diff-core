@@ -1,5 +1,5 @@
-#ifndef DIFF_PATH_UTILS_TEST_HPP
-#define DIFF_PATH_UTILS_TEST_HPP
+#ifndef DIFF_PATCH_UTILS_TEST_HPP
+#define DIFF_PATCH_UTILS_TEST_HPP
 
 #include "utils.hpp"
 #include "AssertHelper.hpp"
@@ -17,4 +17,4 @@ namespace differ
 	}
 }
 
-#endif // DIFF_PATH_UTILS_TEST_HPP
+#endif // DIFF_PATCH_UTILS_TEST_HPP

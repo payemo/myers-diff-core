@@ -1,24 +1,19 @@
-#ifndef DIFF_PATH_MYERS_DIFF_MATCH_TEST_HPP
-#define DIFF_PATH_MYERS_DIFF_MATCH_TEST_HPP
+#ifndef DIFF_PATCH_MYERS_DIFF_MATCH_TEST_HPP
+#define DIFF_PATCH_MYERS_DIFF_MATCH_TEST_HPP
 
-#include "UtilsTest.hpp"
 #include "MyersDiffMatch.hpp"
 
+// TODO: resolve friends conflicts with [test] namespace
 namespace differ
 {
-	namespace tests
+	class MyersDiffMatchTest
 	{
-		class MyersDiffMatchTest
-		{
-		public:
-			void RunAll();
+	public:
+		void RunDiffText();
 
-		private:
-			MyersDiffMatch mdm;
-
-			UtilsTest utilityTests;
-		};
-	}
+	private:
+		MyersDiffMatch mdm{};
+	};
 }
 
-#endif // DIFF_PATH_MYERS_DIFF_MATCH_TEST_HPP
+#endif // DIFF_PATCH_MYERS_DIFF_MATCH_TEST_HPP

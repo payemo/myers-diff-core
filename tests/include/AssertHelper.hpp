@@ -1,5 +1,5 @@
-#ifndef DIFF_PATH_ASSERT_HELPER_HPP
-#define DIFF_PATH_ASSERT_HELPER_HPP
+#ifndef DIFF_PATCH_ASSERT_HELPER_HPP
+#define DIFF_PATCH_ASSERT_HELPER_HPP
 
 #include "defs.hpp"
 
@@ -22,4 +22,4 @@ namespace differ
 	}
 }
 
-#endif // DIFF_PATH_ASSERT_HELPER_HPP
+#endif // DIFF_PATCH_ASSERT_HELPER_HPP

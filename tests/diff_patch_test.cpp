@@ -1,4 +1,4 @@
-#include "MyersDiffMatchTest.hpp"
+#include "GeneralTest.hpp"
 
 using namespace differ;
 using namespace tests;
@@ -7,8 +7,8 @@ int main(int argc, char** argv)
 {
 	try
 	{
-		MyersDiffMatchTest mdm;
-		mdm.RunAll();
+		GeneralTest tests;
+		tests.RunAll();
 	}
 	catch (String caseDescr)
 	{

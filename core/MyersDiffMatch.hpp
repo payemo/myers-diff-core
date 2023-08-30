@@ -1,15 +1,18 @@
 ﻿#ifndef DIFF_PATCH_MYERS_DIFF_MATCH_HPP
 #define DIFF_PATCH_MYERS_DIFF_MATCH_HPP
 
-#include <vector>
 #include "Diff.hpp"
 #include "Patch.hpp"
 #include "utils.hpp"
+
+#include <vector>
 
 namespace differ
 {
     class MyersDiffMatch
     {
+        friend class MyersDiffMatchTest;
+
     public:
         DiffList ComputeDiff(const String& textA, const String& textB)
         {
@@ -212,6 +215,40 @@ namespace differ
 
             diffsA.insert(diffsA.end(), diffsA.begin(), diffsA.end());
             return diffsA;
+        }
+
+        const String DiffText1(const DiffList& diffs) const
+        {
+            String out;
+
+            for (auto di = diffs.begin(); di != diffs.end(); ++di)
+            {
+                const auto& d = *di;
+
+                if (d.GetOperation() != Operation::INSERT)
+                {
+                    out += d.Text();
+                }
+            }
+
+            return out;
+        }
+
+        const String DiffText2(const DiffList& diffs) const
+        {
+            String out;
+
+            for (auto di = diffs.begin(); di != diffs.end(); ++di)
+            {
+                const auto& d = *di;
+
+                if (d.GetOperation() != Operation::DELETE)
+                {
+                    out += d.Text();
+                }
+            }
+
+            return out;
         }
     };
 }

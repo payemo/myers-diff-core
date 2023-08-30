@@ -1,10 +1,11 @@
 #ifndef DIFF_PATCH_DIFF_HPP
 #define DIFF_PATCH_DIFF_HPP
 
+#include "defs.hpp"
+
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
-#include "defs.hpp"
 
 namespace differ
 {
@@ -18,53 +19,24 @@ namespace differ
     class Diff
     {
     public:
-        Diff(Operation operation, const String& text)
-            : op_(operation), text_(text) { }
+        Diff(Operation operation, const String& text);
 
-        bool operator==(const Diff& other) const
-        {
-            return (this->op_ == other.op_) && (this->text_ == other.text_);
-        }
+        bool operator==(const Diff& other) const;
 
-        bool operator!=(const Diff& other) const
-        {
-            return !(*this == other);
-        }
+        bool operator!=(const Diff& other) const;
 
-        const String ToString() const
-        {
-            std::stringstream formattedText;
-            formattedText << "Diff(\""
-                << std::get<String>(Diff::OperationData(op_))
-                << ",\""
-                << text_
-                << "\"";
-
-            return formattedText.str();
-        }
+        const String ToString() const;
 
         inline const Operation GetOperation() const { return op_; }
 
         inline String Text() const { return text_; }
 
     public:
-        static std::tuple<Char, String> OperationData(Operation op)
-        {
-            switch (op)
-            {
-            case Operation::DELETE:
-                return { '-', "DELETE" };
-            case Operation::INSERT:
-                return { '+', "INSERT" };
-            case Operation::EQUAL:
-                return { ' ', "EQUAL" };
-            }
-            throw std::invalid_argument("Invalid input operation.");
-        }
+        static std::tuple<Char, String> OperationData(Operation op);
 
     private:
         Operation op_;
-        const String& text_;
+        String text_;
     };
 }
 

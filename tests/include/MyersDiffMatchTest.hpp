@@ -6,14 +6,17 @@
 // TODO: resolve friends conflicts with [test] namespace
 namespace differ
 {
-	class MyersDiffMatchTest
+	namespace tests
 	{
-	public:
-		void RunDiffText();
+		class MyersDiffMatchTest
+		{
+		public:
+			void RunDiffText();
 
-	private:
-		MyersDiffMatch mdm{};
-	};
+		private:
+			MyersDiffMatch mdm{};
+		};
+	}
 }
 
 #endif // DIFF_PATCH_MYERS_DIFF_MATCH_TEST_HPP

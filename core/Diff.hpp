@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
+#include <list>
 
 namespace differ
 {
@@ -38,6 +39,8 @@ namespace differ
         Operation op_;
         String text_;
     };
+
+    using DiffList = typename std::list<Diff>;
 }
 
 #endif // DIFF_PATCH_DIFF_HPP

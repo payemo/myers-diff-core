@@ -23,7 +23,7 @@ namespace differ
 		}
 
 		// Caller of that method MUST guarantee that a.size() > b.size()
-		inline UInt32 SearchIndexAt(const String& a, const String& b)
+		inline Int32 SearchIndexAt(const String& a, const String& b)
 		{
 			auto at = std::search(a.begin(), a.end(), b.begin(), b.end());
 			return (at < a.end()) ? at - a.begin() : -1;

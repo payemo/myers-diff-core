@@ -1,5 +1,7 @@
 ﻿#include "MyersDiffMatch.hpp"
 
+#include <cmath>
+
 namespace differ
 {
     DiffList MyersDiffMatch::ComputeDiff(const String& textA, const String& textB)
@@ -18,16 +20,29 @@ namespace differ
 
         // Trim common left part
         UInt32 commonLength = utils::CommonPrefixLength(textA, textB);
+        const String& commonPrefix = textA.substr(0, commonLength);
 
         String trimmedA = textA.substr(commonLength);
         String trimmedB = textB.substr(commonLength);
 
         // Trim common right part
         commonLength = utils::CommonSuffixLength(textA, textB);
+        const String& commonSuffix = trimmedA.substr(trimmedA.size() - commonLength);
+
         trimmedA = trimmedA.substr(0, trimmedA.size() - commonLength);
         trimmedB = trimmedB.substr(0, trimmedB.size() - commonLength);
 
         diffs = Compute(trimmedA, trimmedB);
+
+        if (!commonPrefix.empty())
+        {
+            diffs.push_front(Diff{ Operation::EQUAL, commonPrefix });
+            //diffs.insert(diffs.begin(), Diff{ Operation::EQUAL, commonPrefix });
+        }
+        if (!commonSuffix.empty())
+        {
+            diffs.push_back(Diff{ Operation::EQUAL, commonSuffix });
+        }
 
         return diffs;
     }
@@ -52,9 +67,9 @@ namespace differ
         {
             const String& longer = seqA.size() > seqB.size() ? seqA : seqB;
             const String& shorter = seqA.size() > seqB.size() ? seqB : seqA;
-            Size i = utils::SearchIndexAt(longer, shorter);
+            Int32 i = utils::SearchIndexAt(longer, shorter);
 
-            if (i != 1)
+            if (i != -1)
             {
                 // shortest text is a substring of a longer one.
                 Operation op = (seqA.size() > seqB.size()) ? Operation::DELETE : Operation::INSERT;
@@ -63,29 +78,31 @@ namespace differ
                 diffs.push_back(Diff(op, longer.substr(i + shorter.size())));
                 return diffs;
             }
+
+            if (shorter.size() == 1)
+            {
+                diffs.push_back(Diff(Operation::DELETE, seqA));
+                diffs.push_back(Diff(Operation::INSERT, seqB));
+                return diffs;
+            }
         }
 
-        if (seqB.size() == 1)
-        {
-            diffs.push_back(Diff(Operation::DELETE, seqA));
-            diffs.push_back(Diff(Operation::INSERT, seqB));
-            return diffs;
-        }
-
-        return diffs;
+        return MiddleSnake(seqA, seqB);
     }
 
     DiffList MyersDiffMatch::MiddleSnake(const String& seqA, const String& seqB)
     {
-        const Size m = seqA.size();
-        const Size n = seqB.size();
-        const Int32 delta = m - n;
+        const Int32 m = seqA.size();
+        const Int32 n = seqB.size();
+        const Int32 delta = std::abs(m - n);
         // when delta is odd, check for overlap only while extending forward paths
         // when delta is even, check for overlap only while extending reverse paths
         const bool deltaIsOdd = (delta % 2 != 0);
-        const UInt32 maxD = (m + n + 1) / 2;
-        const UInt32 vOffset = maxD;
-        const UInt32 vLength = maxD * 2;
+        const Int32 maxD = (m + n + 1) / 2;
+        const Int32 vOffset = maxD;
+        const Int32 vLength = maxD * 2;
+        Int32 fStart = 0, fEnd = 0;
+        Int32 rStart = 0, rEnd = 0;
 
         std::vector<Int32> fV(vLength, -1);
         fV[vOffset + 1] = 0;
@@ -96,11 +113,11 @@ namespace differ
         for (Int32 d = 0; d < maxD; ++d)
         {
             // Find the end of the furthest reaching forward D-path in diagonal k.
-            for (Int32 k = -d; k <= d; k += 2)
+            for (Int32 k = -d + fStart; k <= d - fEnd; k += 2)
             {
                 Int32 kOffset = vOffset + k;
                 Int32 x;
-                if ((k == -d || k != d) && fV[k - 1] < fV[k + 1])
+                if (k == -d || (k != d && fV[kOffset - 1] < fV[kOffset + 1]))
                 {
                     x = fV[kOffset + 1];
                 }
@@ -118,14 +135,22 @@ namespace differ
 
                 fV[kOffset] = x;
 
-                if (deltaIsOdd)
+                if (x > m)
+                {
+                    fEnd += 2;
+                }
+                else if (y > n)
+                {
+                    fStart += 2;
+                }
+                else if (deltaIsOdd)
                 {
                     /*
                         Check if the path overlaps the furthest reaching reverse(D - 1)-path in diagonal k,
                             where k ∈[∆ − (D − 1), ∆ + (D − 1)]
                     */
                     Int32 rOffset = delta + (vOffset - k); // furthest reaching point of a REVERSED (D - 1)-path of k
-                    if (rOffset >= 0 && vLength < m && rV[rOffset] != -1)
+                    if (rOffset >= 0 && rOffset < vLength && rV[rOffset] != -1)
                     {
                         /*
                             (feasibility) u+v >= ceil(D/2) and x+y <= N + M − floor(D/2), and
@@ -141,11 +166,11 @@ namespace differ
             }
 
             // Find the end of the furthest reaching forward D-path in diagonal k + delta.
-            for (Int32 k = -d; k <= d; k += 2)
+            for (Int32 k = -d + rStart; k <= d - rEnd; k += 2)
             {
                 Int32 kOffset = vOffset + k;
                 Int32 u;
-                if ((k == -d || k != d) && (rV[k - 1] < rV[k + 1]))
+                if (k == -d || (k != d && (rV[kOffset - 1] < rV[kOffset + 1])))
                 {
                     u = rV[kOffset + 1];
                 }
@@ -163,7 +188,15 @@ namespace differ
 
                 rV[kOffset] = u;
 
-                if (!deltaIsOdd)
+                if (u > m)
+                {
+                    rEnd += 2;
+                }
+                else if (v > n)
+                {
+                    rStart += 2;
+                }
+                else if (!deltaIsOdd)
                 {
                     Int32 fOffset = delta + (vOffset - k);
                     if (fOffset >= 0 && fOffset < vLength && fV[fOffset] != -1)
@@ -193,14 +226,14 @@ namespace differ
         String a1 = a.substr(0, x);
         String b1 = b.substr(0, y);
 
-        DiffList diffsA = Compute(a1, b1);
+        DiffList diffsA = ComputeDiff(a1, b1);
 
         a1 = a.substr(x);
         b1 = b.substr(y);
 
-        DiffList diffsB = Compute(a1, b1);
+        DiffList diffsB = ComputeDiff(a1, b1);
 
-        diffsA.insert(diffsA.end(), diffsA.begin(), diffsA.end());
+        diffsA.insert(diffsA.end(), diffsB.begin(), diffsB.end());
         return diffsA;
     }
 

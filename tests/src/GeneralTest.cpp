@@ -11,6 +11,8 @@ namespace differ
 			utilsTest.SearchIndexAtTest();
 
 			myersDiffMatchTest.RunDiffText();
+			myersDiffMatchTest.RunMiddleSnakeTest();
+			myersDiffMatchTest.RunComputeDiffTest();
 		}
 	}
 }

@@ -76,7 +76,8 @@ namespace differ
 			diffs =
 			{
 				Diff {Operation::DELETE, "Apple"},
-				Diff {Operation::INSERT, "Banana"},
+				Diff {Operation::INSERT, "Ba"},
+				Diff {Operation::INSERT, "nana"},
 				Diff {Operation::EQUAL, "s are a"},
 				Diff {Operation::INSERT, "lso"},
 				Diff {Operation::EQUAL, " fruit."}
@@ -101,9 +102,12 @@ namespace differ
 			{
 				Diff{Operation::INSERT, " "},
 				Diff{Operation::EQUAL, "a"},
-				Diff{Operation::INSERT, "nd"},
+				Diff{Operation::INSERT, "n"},
+				Diff{Operation::INSERT, "d"},
 				Diff{Operation::EQUAL, " [[Pennsylvania]]"},
-				Diff{Operation::DELETE, " and [[New" }
+				Diff{Operation::DELETE, " "},
+				Diff{Operation::DELETE, "and"},
+				Diff{Operation::DELETE, " [[New"}
 			};
 			AssertHelper::AssertEqual(
 				"MyersDiffMatch::ComputDiff: Large equality.", 
@@ -111,8 +115,11 @@ namespace differ
 
 			diffs =
 			{
-				Diff {Operation::INSERT, "xaxcx"},
-				Diff {Operation::EQUAL, "abc"},
+				Diff {Operation::INSERT, "x"},
+				Diff {Operation::EQUAL, "a"},
+				Diff {Operation::INSERT, "xc"},
+				Diff {Operation::INSERT, "xa"},
+				Diff {Operation::EQUAL, "bc"},
 				Diff {Operation::DELETE, "y"}
 			};
 			AssertHelper::AssertEqual("MyersDiffMatch::ComputDiff: Overlap #2.", diffs, mdm.ComputeDiff("abcy", "xaxcxabc"));

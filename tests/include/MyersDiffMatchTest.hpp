@@ -14,6 +14,7 @@ namespace differ
 			void RunDiffText();
 			void RunMiddleSnakeTest();
 			void RunComputeDiffTest();
+			void RunMakePatchTest();
 
 		private:
 			MyersDiffMatch mdm{};

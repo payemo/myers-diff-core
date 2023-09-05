@@ -32,6 +32,8 @@ namespace differ
 
         inline String Text() const { return text_; }
 
+        inline UInt32 GetTextLength() const { return text_.size(); }
+
     public:
         static std::tuple<Char, String> OperationData(Operation op);
 

@@ -8,6 +8,10 @@ namespace differ
     class Patch
     {
     public:
+        Int32 startA{ 0 }, lengthA{ 0 };
+        Int32 startB{ 0 }, lengthB{ 0 };
+
+    public:
         /**
          * GNU unified format.
          * Header: @@ -9,3 +8,6 @@
@@ -18,17 +22,17 @@ namespace differ
 
         inline bool IsNull()
         {
-            return (startA_ == 0 && lengthA_ == 0)
-                && (startB_ == 0 && lengthB_ == 0)
+            return (startA == 0 && lengthA == 0)
+                && (startB == 0 && lengthB == 0)
                 && diffs_.size() == 0;
         }
+
+        inline bool HasDiffs() { return !diffs_.empty(); }
 
         inline void Append(const Diff& diff) { diffs_.push_back(diff); }
 
     private:
         DiffList diffs_{};
-        UInt32 startA_{ 0 }, lengthA_{ 0 };
-        UInt32 startB_{ 0 }, lengthB_{ 0 };
 
     private:
         const String GetLineInfo(UInt32 start, UInt32 length) const;
@@ -36,6 +40,8 @@ namespace differ
         // TODO: Replace [ !~*'();/?:@&=+$,#] with %-encoding.
         const String GetPatchBody(const String& lineInfoA, const String& lineInfoB) const;
     };
+
+    using PatchList = typename std::list<Patch>;
 }
 
 #endif

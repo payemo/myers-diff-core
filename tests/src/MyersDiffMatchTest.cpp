@@ -124,5 +124,12 @@ namespace differ
 			};
 			AssertHelper::AssertEqual("MyersDiffMatch::ComputDiff: Overlap #2.", diffs, mdm.ComputeDiff("abcy", "xaxcxabc"));
 		}
+
+		void MyersDiffMatchTest::RunMakePatchTest()
+		{
+			PatchList patches;
+			patches = mdm.MakePatch("", "");
+			AssertHelper::AssertEqual("MyersDiffMatch::MakePatch: empty inputs.", "", mdm.PatchesToText(patches));
+		}
 	}
 }

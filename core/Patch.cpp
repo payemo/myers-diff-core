@@ -4,8 +4,8 @@ namespace differ
 {
     String Patch::ToString() const
     {
-        String lineInfoA = GetLineInfo(startA_, lengthA_);
-        String lineInfoB = GetLineInfo(startB_, lengthB_);
+        String lineInfoA = GetLineInfo(startA, lengthA);
+        String lineInfoB = GetLineInfo(startB, lengthB);
 
         return GetPatchBody(lineInfoA, lineInfoB);
     }
@@ -18,7 +18,7 @@ namespace differ
         {
             lineInfo = start + ",0";
         }
-        else if (lengthA_ == 1)
+        else if (lengthA == 1)
         {
             lineInfo = start + 1;
         }

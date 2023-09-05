@@ -22,6 +22,18 @@ namespace differ
     public:
         DiffList ComputeDiff(const String& textA, const String& textB);
 
+        PatchList MakePatch(const String& text1, const String& textB);
+
+        String PatchesToText(const PatchList& patches);
+
+    protected:
+        PatchList MakePatch(const String& text, const DiffList& diffs);
+
+        void AddContext(Patch& patch, const String& text);
+
+    private:
+        Int32 patchMargin{ 4 };
+
     private:
         DiffList Compute(const String& seqA, const String& seqB);
 

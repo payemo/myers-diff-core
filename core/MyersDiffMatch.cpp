@@ -1,9 +1,11 @@
 ﻿#include "MyersDiffMatch.hpp"
 
-#include <cmath>
+#include <stdexcept>
 
 namespace differ
 {
+	// PUBLIC DEFINITIONS
+
 	DiffList MyersDiffMatch::ComputeDiff(const String& textA, const String& textB)
 	{
 		DiffList diffs{};
@@ -45,6 +47,136 @@ namespace differ
 
 		return diffs;
 	}
+
+	PatchList MyersDiffMatch::MakePatch(const String& textA, const String& textB)
+	{
+		if (textA.empty() || textB.empty())
+		{
+			throw std::invalid_argument("PatchMake: null input.");
+		}
+
+		DiffList diffs = ComputeDiff(textA, textB);
+
+		return MakePatch(textA, diffs);
+	}
+
+	String MyersDiffMatch::PatchesToText(const PatchList& patches)
+	{
+		String text;
+		for (const auto& patch : patches)
+		{
+			text += patch.ToString();
+		}
+		return text;
+	}
+
+	// PROTECTED DEFINITIONS
+
+	PatchList MyersDiffMatch::MakePatch(const String& text, const DiffList& diffs)
+	{
+		PatchList patches{};
+
+		if (diffs.empty())
+		{
+			return patches;
+		}
+
+		Patch patch{};
+
+		String prePatchText = text;
+		Int32 prePatchCount = 0;
+
+		String postPatchText = text;
+		Int32 postPatchCount = 0;
+
+		for (const auto& diff : diffs)
+		{
+			Operation diffOp = diff.GetOperation();
+			Int32 diffLength = diff.GetTextLength();
+
+			if (!patch.HasDiffs() && diffOp != Operation::EQUAL)
+			{
+				patch.startA = prePatchCount;
+				patch.startB = postPatchCount;
+			}
+
+			switch (diff.GetOperation())
+			{
+			case Operation::INSERT:
+				patch.Append(diff);
+
+				patch.lengthB += diffLength;
+
+				postPatchText = postPatchText.substr(0, postPatchCount) +
+					diff.Text() +
+					postPatchText.substr(postPatchCount);
+				break;
+
+			case Operation::DELETE:
+				patch.Append(diff);
+
+				patch.lengthA += diffLength;
+
+				postPatchText = postPatchText.substr(0, postPatchCount) +
+					postPatchText.substr(postPatchCount + diffLength);
+				break;
+
+			case Operation::EQUAL:
+				if (diffLength <= 2 * patchMargin && patch.HasDiffs() && !(diff == diffs.back()))
+				{
+					patch.Append(diff);
+					patch.lengthA += diffLength;
+					patch.lengthB += diffLength;
+				}
+
+				if (diff.GetTextLength() >= 2 * patchMargin)
+				{
+					if (patch.HasDiffs())
+					{
+						// Add context
+						AddContext(patch, prePatchText);
+
+						patches.push_back(patch);
+
+						patch = Patch{};
+						prePatchText = postPatchText;
+						prePatchCount = postPatchCount;
+					}
+				}
+				break;
+			}
+
+			if (diffOp != Operation::INSERT)
+			{
+				prePatchCount += diffLength;
+			}
+			if (diffOp != Operation::DELETE)
+			{
+				postPatchCount += diffLength;
+			}
+		}
+
+		if (patch.HasDiffs())
+		{
+			AddContext(patch, prePatchText);
+			patches.push_back(patch);
+		}
+
+		return patches;
+	}
+
+	void MyersDiffMatch::AddContext(Patch& patch, const String& text)
+	{
+		if (text.empty())
+		{
+			return;
+		}
+
+		String pattern = text.substr(patch.startB, patch.lengthA);
+		Int32 pad = 0;
+	}
+
+	// PRIVATE DEFINITIONS
 
 	DiffList MyersDiffMatch::Compute(const String& seqA, const String& seqB)
 	{

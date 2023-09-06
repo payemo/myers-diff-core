@@ -31,14 +31,13 @@ namespace differ
 
         inline void Append(const Diff& diff) { diffs_.push_back(diff); }
 
+        inline void Prepend(const Diff& diff) { diffs_.push_front(diff); }
+
     private:
         DiffList diffs_{};
 
     private:
         const String GetLineInfo(UInt32 start, UInt32 length) const;
-
-        // TODO: Replace [ !~*'();/?:@&=+$,#] with %-encoding.
-        const String GetPatchBody(const String& lineInfoA, const String& lineInfoB) const;
     };
 
     using PatchList = typename std::list<Patch>;

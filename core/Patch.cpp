@@ -1,5 +1,7 @@
 #include "Patch.hpp"
 
+#include <algorithm>
+
 namespace differ
 {
     String Patch::ToString() const
@@ -7,41 +9,50 @@ namespace differ
         String lineInfoA = GetLineInfo(startA, lengthA);
         String lineInfoB = GetLineInfo(startB, lengthB);
 
-        return GetPatchBody(lineInfoA, lineInfoB);
+        std::stringstream body;
+        body << "@@ -" << lineInfoA << " +" << lineInfoB << " @@\n";
+
+        std::for_each(diffs_.begin(), diffs_.end(), [&body](const Diff& diff)
+        {
+            Operation op = diff.GetOperation();
+
+            switch (op)
+            {
+            case Operation::INSERT:
+                body << "+";
+                break;
+            case Operation::DELETE:
+                body << "-";
+                break;
+            case Operation::EQUAL:
+                body << " ";
+                break;
+            }
+
+            // TODO: Replace [ !~*'();/?:@&=+$,#] with %-encoding.
+            body << diff.Text() << "\n";
+        });
+
+        return body.str();
     }
 
     const String Patch::GetLineInfo(UInt32 start, UInt32 length) const
     {
-        String lineInfo;
+        std::stringstream ss;
 
-        if (start == 0)
+        if (length == 0)
         {
-            lineInfo = start + ",0";
+            ss << start << ",0";
         }
         else if (lengthA == 1)
         {
-            lineInfo = start + 1;
+            ss << start + 1;
         }
         else
         {
-            lineInfo = (start + 1) + "," + length;
+            ss << (start + 1) << "," << length;
         }
 
-        return lineInfo;
-    }
-
-    // TODO: Replace [ !~*'();/?:@&=+$,#] with %-encoding.
-    const String Patch::GetPatchBody(const String& lineInfoA, const String& lineInfoB) const
-    {
-        std::stringstream body("@@ -" + lineInfoA + " +" + lineInfoB + "@@\n");
-
-        /*std::for_each(diffs_.begin(), diffs_.end(), [&body](const Diff& diff)
-        {
-            Operation op = diff.GetOperation();
-            body << std::get<char>(Diff::OperationData(op));
-            body << "asd" << std::endl;
-        });*/
-
-        return body.str();
+        return ss.str();
     }
 }

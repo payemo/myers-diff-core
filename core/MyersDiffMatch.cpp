@@ -52,7 +52,7 @@ namespace differ
 	{
 		if (textA.empty() || textB.empty())
 		{
-			throw std::invalid_argument("PatchMake: null input.");
+			return {};
 		}
 
 		DiffList diffs = ComputeDiff(textA, textB);
@@ -174,6 +174,39 @@ namespace differ
 
 		String pattern = text.substr(patch.startB, patch.lengthA);
 		Int32 pad = 0;
+		Int32 textSize = text.size();
+
+		while (text.find(pattern) != text.rfind(pattern) && pattern.size() < 32 - 2 * patchMargin)
+		{
+			pad += patchMargin;
+			pattern = text.substr(std::max(0, patch.startB - pad),
+				std::min(textSize, patch.startB + patch.lengthA + pad) -
+				std::max(0, patch.startA - pad));
+		}
+
+		pad += patchMargin;
+
+		String prefix = text.substr(std::max(0, patch.startB - pad),
+			patch.startB - std::max(0, patch.startB - pad));
+
+		if (!prefix.empty())
+		{
+			patch.Prepend(Diff{ Operation::EQUAL, prefix });
+		}
+
+		String suffix = text.substr(patch.startB + patch.lengthA, 
+			std::min(textSize, patch.startB + patch.lengthA + pad) - (patch.startB + patch.lengthA));
+
+		if (!suffix.empty())
+		{
+			patch.Append(Diff{ Operation::EQUAL, suffix });
+		}
+
+		patch.startA -= prefix.size();
+		patch.startB -= prefix.size();
+
+		patch.lengthA += prefix.size() + suffix.size();
+		patch.lengthB += prefix.size() + suffix.size();
 	}
 
 	// PRIVATE DEFINITIONS

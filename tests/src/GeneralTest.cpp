@@ -13,6 +13,7 @@ namespace differ
 			myersDiffMatchTest.RunDiffText();
 			myersDiffMatchTest.RunMiddleSnakeTest();
 			myersDiffMatchTest.RunComputeDiffTest();
+			myersDiffMatchTest.RunMakePatchTest();
 		}
 	}
 }

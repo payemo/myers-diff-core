@@ -130,6 +130,17 @@ namespace differ
 			PatchList patches;
 			patches = mdm.MakePatch("", "");
 			AssertHelper::AssertEqual("MyersDiffMatch::MakePatch: empty inputs.", "", mdm.PatchesToText(patches));
+
+			String text1 = "The quick brown fox jumps over the lazy dog.";
+			String text2 = "That quick brown fox jumped over a lazy dog.";
+
+			String expectedPatch = "@@ -1,8 +1,7 @@\n Th\n-at\n+e\n  qui\n@@ -21,17 +21,18 @@\n jump\n-ed\n+s\n  over \n+th\n-a\n+e\n  laz\n";
+			patches = mdm.MakePatch(text2, text1);
+			AssertHelper::AssertEqual("MyersDiffMatch::MakePatch: Text2+Text1 inputs", expectedPatch, mdm.PatchesToText(patches));
+
+			expectedPatch = "@@ -1,11 +1,12 @@\n Th\n-e\n+at\n  quick b\n@@ -22,18 +22,17 @@\n jump\n-s\n+e\n+d\n  over \n+a\n-t\n-he\n  laz\n";
+			patches = mdm.MakePatch(text1, text2);
+			AssertHelper::AssertEqual("MyersDiffMatch::MakePatch: Text2+Text1 inputs", expectedPatch, mdm.PatchesToText(patches));
 		}
 	}
 }

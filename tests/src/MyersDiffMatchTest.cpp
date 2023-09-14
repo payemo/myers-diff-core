@@ -1,6 +1,8 @@
 #include "MyersDiffMatchTest.hpp"
 #include "AssertHelper.hpp"
 
+#include <iterator>
+
 namespace differ
 {
 	namespace tests
@@ -110,7 +112,7 @@ namespace differ
 				Diff{Operation::DELETE, " [[New"}
 			};
 			AssertHelper::AssertEqual(
-				"MyersDiffMatch::ComputDiff: Large equality.", 
+				"MyersDiffMatch::ComputDiff: Large equality.",
 				diffs, mdm.ComputeDiff("a [[Pennsylvania]] and [[New", " and [[Pennsylvania]]"));
 
 			diffs =
@@ -141,6 +143,21 @@ namespace differ
 			expectedPatch = "@@ -1,11 +1,12 @@\n Th\n-e\n+at\n  quick b\n@@ -22,18 +22,17 @@\n jump\n-s\n+e\n+d\n  over \n+a\n-t\n-he\n  laz\n";
 			patches = mdm.MakePatch(text1, text2);
 			AssertHelper::AssertEqual("MyersDiffMatch::MakePatch: Text2+Text1 inputs", expectedPatch, mdm.PatchesToText(patches));
+		}
+
+		void MyersDiffMatchTest::RunCleanupMergeTest()
+		{
+			DiffList diffs;
+			mdm.CleanupMerge(diffs);
+			AssertHelper::AssertEqual("MyersDiffMatch::CleanupMerge: Null case.", DiffList{}, diffs);
+
+			diffs = { Diff{Operation::EQUAL, "a"}, Diff{Operation::DELETE, "b"}, Diff{Operation::INSERT, "c"} };
+			mdm.CleanupMerge(diffs);
+			AssertHelper::AssertEqual("MyersDiffMatch::CleanupMerge: NO changes.", DiffList{ Diff{Operation::EQUAL, "a"}, Diff{Operation::DELETE, "b"}, Diff{Operation::INSERT, "c"} }, diffs);
+
+			diffs = { Diff{Operation::EQUAL, "a"}, Diff{Operation::EQUAL, "b"}, Diff{Operation::EQUAL, "c"} };
+			mdm.CleanupMerge(diffs);
+			AssertHelper::AssertEqual("MyersDiffMatch::CleanupMerge: Merge equalities.", DiffList{ Diff{Operation::EQUAL, "abc"} }, diffs);
 		}
 	}
 }

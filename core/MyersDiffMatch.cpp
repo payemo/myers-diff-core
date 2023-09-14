@@ -406,15 +406,15 @@ namespace differ
 
 	void MyersDiffMatch::CleanupMerge(DiffList& diffs)
 	{
-		diffs.push_front(Diff{ Operation::EQUAL, "" });
+		diffs.push_back(Diff{ Operation::EQUAL, "" });
 		DiffList::iterator ptr = diffs.begin();
 		DiffList::iterator tmp = ptr;
 
 		int cntDelete = 0, cntInsert = 0;
 		String textDelete = "", textInsert = "";
 
-
-		Diff* thisDiff = (ptr != diffs.end()) ? &(*(tmp = std::next(tmp))) : nullptr;
+		Diff* thisDiff = &(*tmp++);//(tmp != diffs.end() && std::next(tmp) != diffs.end()) ? &(*(tmp = std::next(tmp))) : nullptr;
+		//tmp = std::next(tmp);
 		Diff* prevEq = nullptr;
 		int commonLength;
 
@@ -440,7 +440,7 @@ namespace differ
 				if (cntDelete + cntInsert > 1)
 				{
 					bool both = cntDelete != 0 && cntInsert != 0;
-					tmp = std::prev(ptr);
+					tmp = std::prev(tmp);
 
 					while (cntDelete-- > 0)
 					{
@@ -462,7 +462,7 @@ namespace differ
 						{
 							if (tmp != diffs.begin())
 							{
-								thisDiff = &(*std::prev(tmp));
+								thisDiff = &(*std::prev(tmp--));
 								if (thisDiff->GetOperation() != Operation::EQUAL)
 								{
 									throw "Previous diff should have been an equality";
@@ -493,23 +493,25 @@ namespace differ
 					// insert merged records
 					if (!textDelete.empty())
 					{
-						diffs.insert(tmp, Diff{ Operation::DELETE, textDelete });
+						tmp = diffs.insert(tmp, Diff{ Operation::DELETE, textDelete });
+						tmp++;
 					}
 					if (!textInsert.empty())
 					{
-						diffs.insert(tmp, Diff{ Operation::INSERT, textInsert });
+						tmp = diffs.insert(tmp, Diff{ Operation::INSERT, textInsert });
+						tmp++;
 					}
 
 					// Step forward to the equality
-					thisDiff = (tmp != diffs.end()) ? &(*std::next(tmp)) : nullptr;
+					thisDiff = (tmp != diffs.end()) ? &(*tmp++) : nullptr;
 				}
 				else if (prevEq != nullptr)
 				{
 					// Merge equality with the previous one
 					prevEq->AppendText(thisDiff->Text());
-					tmp = diffs.erase(tmp);
+					tmp = diffs.erase(--tmp);
 
-					thisDiff = &(*std::prev(tmp));
+					thisDiff = &(*std::prev(tmp--));
 					tmp = std::next(tmp); // forward
 				}
 				cntDelete = cntInsert = 0;
@@ -519,7 +521,8 @@ namespace differ
 
 			}
 			
-			thisDiff = (tmp != diffs.end()) ? &(*std::next(tmp)) : nullptr;
+			thisDiff = (tmp != diffs.end()) ? &(*(tmp++)) : nullptr;
+			//tmp = std::next(tmp);
 		}
 
 		if (diffs.back().Text().empty())
@@ -530,9 +533,9 @@ namespace differ
 		bool changes = false;
 		tmp = diffs.begin();
 
-		Diff* prevDiff = (tmp != diffs.end()) ? &(*(tmp = std::next(tmp))) : nullptr;
-		thisDiff = (tmp != diffs.end()) ? &(*(tmp = std::next(tmp))) : nullptr;
-		Diff* nextDiff = (tmp != diffs.end()) ? &(*(tmp = std::next(tmp))) : nullptr;
+		Diff* prevDiff = (tmp != diffs.end()) ? &(*tmp++) : nullptr;
+		thisDiff = (tmp != diffs.end()) ? &(*tmp++) : nullptr;
+		Diff* nextDiff = (tmp != diffs.end()) ? &(*tmp++) : nullptr;
 
 		while (nextDiff != nullptr)
 		{
@@ -555,8 +558,8 @@ namespace differ
 					tmp = diffs.erase(tmp);
 					tmp = std::next(tmp);
 					tmp = std::next(tmp);
-					thisDiff = &(*(tmp = std::next(tmp)));
-					nextDiff = (tmp != diffs.end()) ? &(*(tmp = std::next(tmp))) : nullptr;
+					thisDiff = &(*tmp++);
+					nextDiff = (tmp != diffs.end()) ? &(*tmp++) : nullptr;
 					changes = true;
 				}
 				else if (utils::StringStartsWith(thisDiff->Text(), nextDiff->Text()))
@@ -567,13 +570,13 @@ namespace differ
 					thisDiff->ReplaceText(std::move(replace));
 
 					diffs.erase(tmp);
-					nextDiff = (tmp != diffs.end()) ? &(*(tmp = std::next(tmp))) : nullptr;
+					nextDiff = (tmp != diffs.end()) ? &(*tmp++) : nullptr;
 					changes = true;
 				}
 			}
 			prevDiff = thisDiff;
 			thisDiff = nextDiff;
-			nextDiff = (tmp != diffs.end()) ? &(*(tmp = std::next(tmp))) : nullptr;
+			nextDiff = (tmp != diffs.end()) ? &(*tmp++) : nullptr;
 		}
 
 		if (changes)

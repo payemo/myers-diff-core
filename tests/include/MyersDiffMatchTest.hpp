@@ -11,6 +11,7 @@ namespace differ
 		class MyersDiffMatchTest
 		{
 		public:
+			void RunCleanupMergeTest();
 			void RunDiffText();
 			void RunMiddleSnakeTest();
 			void RunComputeDiffTest();

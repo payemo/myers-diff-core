@@ -10,6 +10,7 @@ namespace differ
 			utilsTest.CommonSuffixTest();
 			utilsTest.SearchIndexAtTest();
 
+			myersDiffMatchTest.RunCleanupMergeTest();
 			myersDiffMatchTest.RunDiffText();
 			myersDiffMatchTest.RunMiddleSnakeTest();
 			myersDiffMatchTest.RunComputeDiffTest();

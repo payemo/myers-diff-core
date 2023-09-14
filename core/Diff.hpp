@@ -32,6 +32,12 @@ namespace differ
 
         inline String Text() const { return text_; }
 
+        inline void AppendText(const String& str) { text_ += str; }
+
+        inline void PrependText(const String& str) { text_ = str + text_; }
+
+        inline void ReplaceText(String&& with) { text_ = with; }
+
         inline UInt32 GetTextLength() const { return text_.size(); }
 
     public:

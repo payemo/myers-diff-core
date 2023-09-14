@@ -41,6 +41,8 @@ namespace differ
 
         DiffList Partition(const String& a, const String& b, Int32 x, Int32 y);
 
+        void CleanupMerge(DiffList& diffs);
+
         const String DiffText1(const DiffList& diffs) const;
 
         const String DiffText2(const DiffList& diffs) const;

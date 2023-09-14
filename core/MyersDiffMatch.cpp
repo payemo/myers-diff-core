@@ -1,6 +1,7 @@
 ﻿#include "MyersDiffMatch.hpp"
 
 #include <stdexcept>
+#include <iterator>
 
 namespace differ
 {
@@ -43,6 +44,11 @@ namespace differ
 		if (!commonSuffix.empty())
 		{
 			diffs.push_back(Diff{ Operation::EQUAL, commonSuffix });
+		}
+
+		if (!diffs.empty())
+		{
+			CleanupMerge(diffs);
 		}
 
 		return diffs;
@@ -194,7 +200,7 @@ namespace differ
 			patch.Prepend(Diff{ Operation::EQUAL, prefix });
 		}
 
-		String suffix = text.substr(patch.startB + patch.lengthA, 
+		String suffix = text.substr(patch.startB + patch.lengthA,
 			std::min(textSize, patch.startB + patch.lengthA + pad) - (patch.startB + patch.lengthA));
 
 		if (!suffix.empty())
@@ -396,6 +402,184 @@ namespace differ
 
 		diffsA.insert(diffsA.end(), diffsB.begin(), diffsB.end());
 		return diffsA;
+	}
+
+	void MyersDiffMatch::CleanupMerge(DiffList& diffs)
+	{
+		diffs.push_front(Diff{ Operation::EQUAL, "" });
+		DiffList::iterator ptr = diffs.begin();
+		DiffList::iterator tmp = ptr;
+
+		int cntDelete = 0, cntInsert = 0;
+		String textDelete = "", textInsert = "";
+
+
+		Diff* thisDiff = (ptr != diffs.end()) ? &(*(tmp = std::next(tmp))) : nullptr;
+		Diff* prevEq = nullptr;
+		int commonLength;
+
+		while (thisDiff != nullptr)
+		{
+			auto op = thisDiff->GetOperation();
+
+			switch (op)
+			{
+			case Operation::DELETE:
+				++cntDelete;
+				textDelete += thisDiff->Text();
+				prevEq = nullptr;
+				break;
+
+			case Operation::INSERT:
+				++cntInsert;
+				textInsert += thisDiff->Text();
+				prevEq = nullptr;
+				break;
+
+			case Operation::EQUAL:
+				if (cntDelete + cntInsert > 1)
+				{
+					bool both = cntDelete != 0 && cntInsert != 0;
+					tmp = std::prev(ptr);
+
+					while (cntDelete-- > 0)
+					{
+						tmp = std::prev(tmp);
+						tmp = diffs.erase(tmp);
+					}
+
+					while (cntInsert-- > 0)
+					{
+						tmp = std::prev(tmp);
+						tmp = diffs.erase(tmp);
+					}
+
+					if (both)
+					{
+						commonLength = utils::CommonPrefixLength(textInsert, textDelete);
+
+						if (commonLength != 0)
+						{
+							if (tmp != diffs.begin())
+							{
+								thisDiff = &(*std::prev(tmp));
+								if (thisDiff->GetOperation() != Operation::EQUAL)
+								{
+									throw "Previous diff should have been an equality";
+								}
+								thisDiff->AppendText(textInsert.substr(0, commonLength));
+								tmp = std::next(tmp);
+							}
+							else
+							{
+								tmp = diffs.insert(tmp, Diff{ Operation::EQUAL, textInsert.substr(0, commonLength) });
+							}
+							textInsert = textInsert.substr(commonLength);
+							textDelete = textDelete.substr(commonLength);
+						}
+
+						commonLength = utils::CommonSuffixLength(textInsert, textDelete);
+						if (commonLength != 0)
+						{
+							thisDiff = &(*std::next(tmp));
+							thisDiff->PrependText(textInsert.substr(textInsert.size() - commonLength));
+
+							textInsert = textInsert.substr(0, textInsert.size() - commonLength);
+							textDelete = textDelete.substr(0, textDelete.size() - commonLength);
+
+							tmp = std::prev(tmp);
+						}
+					}
+					// insert merged records
+					if (!textDelete.empty())
+					{
+						diffs.insert(tmp, Diff{ Operation::DELETE, textDelete });
+					}
+					if (!textInsert.empty())
+					{
+						diffs.insert(tmp, Diff{ Operation::INSERT, textInsert });
+					}
+
+					// Step forward to the equality
+					thisDiff = (tmp != diffs.end()) ? &(*std::next(tmp)) : nullptr;
+				}
+				else if (prevEq != nullptr)
+				{
+					// Merge equality with the previous one
+					prevEq->AppendText(thisDiff->Text());
+					tmp = diffs.erase(tmp);
+
+					thisDiff = &(*std::prev(tmp));
+					tmp = std::next(tmp); // forward
+				}
+				cntDelete = cntInsert = 0;
+				textDelete = textInsert = "";
+				prevEq = thisDiff;
+				break;
+
+			}
+			
+			thisDiff = (tmp != diffs.end()) ? &(*std::next(tmp)) : nullptr;
+		}
+
+		if (diffs.back().Text().empty())
+		{
+			diffs.pop_back();
+		}
+
+		bool changes = false;
+		tmp = diffs.begin();
+
+		Diff* prevDiff = (tmp != diffs.end()) ? &(*(tmp = std::next(tmp))) : nullptr;
+		thisDiff = (tmp != diffs.end()) ? &(*(tmp = std::next(tmp))) : nullptr;
+		Diff* nextDiff = (tmp != diffs.end()) ? &(*(tmp = std::next(tmp))) : nullptr;
+
+		while (nextDiff != nullptr)
+		{
+			if (prevDiff->GetOperation() == Operation::EQUAL &&
+				nextDiff->GetOperation() == Operation::EQUAL)
+			{
+				// Single edit surrounded by equalities
+				if (utils::StringEndsWith(thisDiff->Text(), prevDiff->Text()))
+				{
+					String newText = prevDiff->Text() + 
+						thisDiff->Text().substr(thisDiff->GetTextLength() - prevDiff->GetTextLength());
+
+					thisDiff->ReplaceText(std::move(newText));
+
+					nextDiff->PrependText(prevDiff->Text());
+
+					tmp = std::prev(tmp);
+					tmp = std::prev(tmp);
+					tmp = std::prev(tmp);
+					tmp = diffs.erase(tmp);
+					tmp = std::next(tmp);
+					tmp = std::next(tmp);
+					thisDiff = &(*(tmp = std::next(tmp)));
+					nextDiff = (tmp != diffs.end()) ? &(*(tmp = std::next(tmp))) : nullptr;
+					changes = true;
+				}
+				else if (utils::StringStartsWith(thisDiff->Text(), nextDiff->Text()))
+				{
+					prevDiff->AppendText(nextDiff->Text());
+
+					String replace = thisDiff->Text().substr(nextDiff->GetTextLength()) + nextDiff->Text();
+					thisDiff->ReplaceText(std::move(replace));
+
+					diffs.erase(tmp);
+					nextDiff = (tmp != diffs.end()) ? &(*(tmp = std::next(tmp))) : nullptr;
+					changes = true;
+				}
+			}
+			prevDiff = thisDiff;
+			thisDiff = nextDiff;
+			nextDiff = (tmp != diffs.end()) ? &(*(tmp = std::next(tmp))) : nullptr;
+		}
+
+		if (changes)
+		{
+			CleanupMerge(diffs);
+		}
 	}
 
 	const String MyersDiffMatch::DiffText1(const DiffList& diffs) const

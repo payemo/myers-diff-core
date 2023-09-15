@@ -31,11 +31,12 @@ namespace differ
 
 		inline bool StringEndsWith(const String& src, const String& end)
 		{
-			if (end.size() > src.size())
+			auto s1 = src.size(), s2 = end.size();
+			if (s1 < s2)
 			{
 				return false;
 			}
-			return std::equal(src.rbegin(), src.rend(), end.rbegin());
+			return std::equal(src.begin() + s1 - s2, src.end(), end.begin());
 		}
 
 		inline bool StringStartsWith(const String& src, const String& start)
@@ -44,7 +45,7 @@ namespace differ
 			{
 				return false;
 			}
-			return std::equal(src.begin(), src.end(), start.begin());
+			return std::equal(start.begin(), start.end(), src.begin());
 		}
 	}
 }

@@ -413,8 +413,7 @@ namespace differ
 		int cntDelete = 0, cntInsert = 0;
 		String textDelete = "", textInsert = "";
 
-		Diff* thisDiff = &(*tmp++);//(tmp != diffs.end() && std::next(tmp) != diffs.end()) ? &(*(tmp = std::next(tmp))) : nullptr;
-		//tmp = std::next(tmp);
+		Diff* thisDiff = &(*tmp++);
 		Diff* prevEq = nullptr;
 		int commonLength;
 
@@ -468,7 +467,6 @@ namespace differ
 									throw "Previous diff should have been an equality";
 								}
 								thisDiff->AppendText(textInsert.substr(0, commonLength));
-								tmp = std::next(tmp);
 							}
 							else
 							{
@@ -481,13 +479,11 @@ namespace differ
 						commonLength = utils::CommonSuffixLength(textInsert, textDelete);
 						if (commonLength != 0)
 						{
-							thisDiff = &(*std::next(tmp));
+							thisDiff = &(*std::next(tmp++));
 							thisDiff->PrependText(textInsert.substr(textInsert.size() - commonLength));
 
 							textInsert = textInsert.substr(0, textInsert.size() - commonLength);
 							textDelete = textDelete.substr(0, textDelete.size() - commonLength);
-
-							tmp = std::prev(tmp);
 						}
 					}
 					// insert merged records
@@ -511,18 +507,15 @@ namespace differ
 					prevEq->AppendText(thisDiff->Text());
 					tmp = diffs.erase(--tmp);
 
-					thisDiff = &(*std::prev(tmp--));
-					tmp = std::next(tmp); // forward
+					thisDiff = &(*std::prev(tmp));
 				}
 				cntDelete = cntInsert = 0;
 				textDelete = textInsert = "";
 				prevEq = thisDiff;
 				break;
-
 			}
 			
 			thisDiff = (tmp != diffs.end()) ? &(*(tmp++)) : nullptr;
-			//tmp = std::next(tmp);
 		}
 
 		if (diffs.back().Text().empty())
@@ -546,7 +539,7 @@ namespace differ
 				if (utils::StringEndsWith(thisDiff->Text(), prevDiff->Text()))
 				{
 					String newText = prevDiff->Text() + 
-						thisDiff->Text().substr(thisDiff->GetTextLength() - prevDiff->GetTextLength());
+						thisDiff->Text().substr(0, thisDiff->GetTextLength() - prevDiff->GetTextLength());
 
 					thisDiff->ReplaceText(std::move(newText));
 
@@ -556,7 +549,6 @@ namespace differ
 					tmp = std::prev(tmp);
 					tmp = std::prev(tmp);
 					tmp = diffs.erase(tmp);
-					tmp = std::next(tmp);
 					tmp = std::next(tmp);
 					thisDiff = &(*tmp++);
 					nextDiff = (tmp != diffs.end()) ? &(*tmp++) : nullptr;
@@ -569,7 +561,7 @@ namespace differ
 					String replace = thisDiff->Text().substr(nextDiff->GetTextLength()) + nextDiff->Text();
 					thisDiff->ReplaceText(std::move(replace));
 
-					diffs.erase(tmp);
+					tmp = diffs.erase(--tmp);
 					nextDiff = (tmp != diffs.end()) ? &(*tmp++) : nullptr;
 					changes = true;
 				}

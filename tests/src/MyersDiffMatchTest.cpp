@@ -78,8 +78,7 @@ namespace differ
 			diffs =
 			{
 				Diff {Operation::DELETE, "Apple"},
-				Diff {Operation::INSERT, "Ba"},
-				Diff {Operation::INSERT, "nana"},
+				Diff {Operation::INSERT, "Banana"},
 				Diff {Operation::EQUAL, "s are a"},
 				Diff {Operation::INSERT, "lso"},
 				Diff {Operation::EQUAL, " fruit."}
@@ -104,12 +103,9 @@ namespace differ
 			{
 				Diff{Operation::INSERT, " "},
 				Diff{Operation::EQUAL, "a"},
-				Diff{Operation::INSERT, "n"},
-				Diff{Operation::INSERT, "d"},
+				Diff{Operation::INSERT, "nd"},
 				Diff{Operation::EQUAL, " [[Pennsylvania]]"},
-				Diff{Operation::DELETE, " "},
-				Diff{Operation::DELETE, "and"},
-				Diff{Operation::DELETE, " [[New"}
+				Diff{Operation::DELETE, " and [[New"},
 			};
 			AssertHelper::AssertEqual(
 				"MyersDiffMatch::ComputDiff: Large equality.",
@@ -117,11 +113,8 @@ namespace differ
 
 			diffs =
 			{
-				Diff {Operation::INSERT, "x"},
-				Diff {Operation::EQUAL, "a"},
-				Diff {Operation::INSERT, "xc"},
-				Diff {Operation::INSERT, "xa"},
-				Diff {Operation::EQUAL, "bc"},
+				Diff {Operation::INSERT, "xaxcx"},
+				Diff {Operation::EQUAL, "abc"},
 				Diff {Operation::DELETE, "y"}
 			};
 			AssertHelper::AssertEqual("MyersDiffMatch::ComputDiff: Overlap #2.", diffs, mdm.ComputeDiff("abcy", "xaxcxabc"));
@@ -136,11 +129,11 @@ namespace differ
 			String text1 = "The quick brown fox jumps over the lazy dog.";
 			String text2 = "That quick brown fox jumped over a lazy dog.";
 
-			String expectedPatch = "@@ -1,8 +1,7 @@\n Th\n-at\n+e\n  qui\n@@ -21,17 +21,18 @@\n jump\n-ed\n+s\n  over \n+th\n-a\n+e\n  laz\n";
+			String expectedPatch = "@@ -1,8 +1,7 @@\n Th\n-at\n+e\n  qui\n@@ -21,17 +21,18 @@\n jump\n-ed\n+s\n  over \n-a\n+the\n  laz\n";
 			patches = mdm.MakePatch(text2, text1);
 			AssertHelper::AssertEqual("MyersDiffMatch::MakePatch: Text2+Text1 inputs", expectedPatch, mdm.PatchesToText(patches));
 
-			expectedPatch = "@@ -1,11 +1,12 @@\n Th\n-e\n+at\n  quick b\n@@ -22,18 +22,17 @@\n jump\n-s\n+e\n+d\n  over \n+a\n-t\n-he\n  laz\n";
+			expectedPatch = "@@ -1,11 +1,12 @@\n Th\n-e\n+at\n  quick b\n@@ -22,18 +22,17 @@\n jump\n-s\n+ed\n  over \n-the\n+a\n  laz\n";
 			patches = mdm.MakePatch(text1, text2);
 			AssertHelper::AssertEqual("MyersDiffMatch::MakePatch: Text2+Text1 inputs", expectedPatch, mdm.PatchesToText(patches));
 		}
@@ -158,6 +151,70 @@ namespace differ
 			diffs = { Diff{Operation::EQUAL, "a"}, Diff{Operation::EQUAL, "b"}, Diff{Operation::EQUAL, "c"} };
 			mdm.CleanupMerge(diffs);
 			AssertHelper::AssertEqual("MyersDiffMatch::CleanupMerge: Merge equalities.", DiffList{ Diff{Operation::EQUAL, "abc"} }, diffs);
+
+			diffs = { Diff{Operation::DELETE, "a"}, Diff{Operation::DELETE, "b"}, Diff{Operation::DELETE, "c"} };
+			mdm.CleanupMerge(diffs);
+			AssertHelper::AssertEqual("MyersDiffMatch::CleanupMerge: Merge deletions.", DiffList{ Diff{Operation::DELETE, "abc"} }, diffs);
+
+			diffs = { Diff{Operation::INSERT, "a"}, Diff{Operation::INSERT, "b"}, Diff{Operation::INSERT, "c"} };
+			mdm.CleanupMerge(diffs);
+			AssertHelper::AssertEqual("MyersDiffMatch::CleanupMerge: Merge insertions.", DiffList{ Diff{Operation::INSERT, "abc"} }, diffs);
+
+			diffs = {
+				Diff{Operation::DELETE, "a"},
+				Diff{Operation::INSERT, "b"},
+				Diff{Operation::DELETE, "c"},
+				Diff{Operation::INSERT, "d"},
+				Diff{Operation::EQUAL, "e"},
+				Diff{Operation::EQUAL, "f"}
+			};
+			mdm.CleanupMerge(diffs);
+			AssertHelper::AssertEqual("MyersDiffMatch::CleanupMerge: Merge interweave.",
+				DiffList{ Diff{Operation::DELETE, "ac"}, Diff{Operation::INSERT, "bd"}, Diff{Operation::EQUAL, "ef"} }, diffs);
+
+			diffs = { Diff{Operation::DELETE, "a"}, Diff{Operation::INSERT, "abc"}, Diff{Operation::DELETE, "dc"} };
+			mdm.CleanupMerge(diffs);
+			AssertHelper::AssertEqual("MyersDiffMatch::CleanupMerge: Merge insertions with prefix and suffix detection.",
+				DiffList{ Diff{Operation::EQUAL, "a"}, Diff{Operation::DELETE, "d"}, Diff{Operation::INSERT, "b"}, Diff{Operation::EQUAL, "c"} }, diffs);
+
+			diffs = {
+				Diff{Operation::EQUAL, "x"},
+				Diff{Operation::DELETE, "a"},
+				Diff{Operation::INSERT, "abc"},
+				Diff{Operation::DELETE, "dc"},
+				Diff{Operation::EQUAL, "y"}
+			};
+			mdm.CleanupMerge(diffs);
+			AssertHelper::AssertEqual("MyersDiffMatch::CleanupMerge: Prefix and suffix detection with equalities.",
+				DiffList{ Diff{Operation::EQUAL, "xa"}, Diff{Operation::DELETE, "d"}, Diff{Operation::INSERT, "b"}, Diff{Operation::EQUAL, "cy"} }, diffs);
+
+			diffs = { Diff{Operation::EQUAL, "a" }, Diff{Operation::INSERT, "ba"}, Diff{Operation::EQUAL, "c" } };
+			mdm.CleanupMerge(diffs);
+			AssertHelper::AssertEqual("MyersDiffMatch::CleanupMerge: Slide edit left.", DiffList{ Diff{Operation::INSERT, "ab"}, Diff{Operation::EQUAL, "ac"} }, diffs);
+
+			diffs = { Diff{Operation::EQUAL, "c" }, Diff{Operation::INSERT, "ab"}, Diff{Operation::EQUAL, "a" } };
+			mdm.CleanupMerge(diffs);
+			AssertHelper::AssertEqual("MyersDiffMatch::CleanupMerge: Slide edit right.", DiffList{ Diff{Operation::EQUAL, "ca"}, Diff{Operation::INSERT, "ba"} }, diffs);
+
+			diffs = {
+				Diff{Operation::EQUAL, "a"},
+				Diff{Operation::DELETE, "b"},
+				Diff{Operation::EQUAL, "c"},
+				Diff{Operation::DELETE, "ac"},
+				Diff{Operation::EQUAL, "x"}
+			};
+			mdm.CleanupMerge(diffs);
+			AssertHelper::AssertEqual("MyersDiffMatch::CleanupMerge: Slide edit left recursive.", DiffList{ Diff{Operation::DELETE, "abc" }, Diff{ Operation::EQUAL, "acx"} }, diffs);
+
+			diffs = {
+				Diff{Operation::EQUAL, "x"},
+				Diff{Operation::DELETE, "ca"},
+				Diff{Operation::EQUAL, "c"},
+				Diff{Operation::DELETE, "b"},
+				Diff{Operation::EQUAL, "a"}
+			};
+			mdm.CleanupMerge(diffs);
+			AssertHelper::AssertEqual("MyersDiffMatch::CleanupMerge: Slide edit right recursive.", DiffList{ Diff{Operation::EQUAL, "xca" }, Diff{ Operation::DELETE, "cba"} }, diffs);
 		}
 	}
 }

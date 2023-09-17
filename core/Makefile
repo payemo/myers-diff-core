@@ -19,10 +19,12 @@ $(LIB): | mkdirlib
 .PHONY: mkdirobj mkdirlib
 
 mkdirobj:
-	mkdir $(OBJ_DIR)
+	@mkdir $(OBJ_DIR)
+	@echo "$(OBJ_DIR) created."
 
 mkdirlib:
-	mkdir $(LIB_DIR)
+	@mkdir $(LIB_DIR)
+	@echo $(LIB_DIR) created.
 
 # rule for clearing object files
 .PHONY: cleanall cleandirs cleanobjdir cleanlibdir
@@ -32,9 +34,9 @@ cleanall: cleandirs
 cleandirs: cleanobjdir cleanlibdir
 
 cleanobjdir:
-	rm -r $(OBJ_DIR)
-	$(info [$(OBJ_DIR)] folder has been removed.)
+	@rm -r $(OBJ_DIR)
+	@echo [$(OBJ_DIR)] folder has been removed.
 
 cleanlibdir:
-	rm -r $(LIB_DIR)
-	$(info [$(LIB_DIR)] folder has been removed.)
+	@rm -r $(LIB_DIR)
+	@echo [$(LIB_DIR)] folder has been removed.
